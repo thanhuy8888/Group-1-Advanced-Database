@@ -1,0 +1,51 @@
+Code final: 
+*real-times:
+-- Inventory Table
+CREATE TABLE inventory (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(255) NOT NULL,
+    stock_quantity INT NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Orders Table
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    order_status ENUM('Pending', 'Processing', 'Shipped', 'Delivered') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES inventory(product_id)
+);
+
+-- Shipments Table
+CREATE TABLE shipments (
+    shipment_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    shipment_status ENUM('In Transit', 'Delivered') DEFAULT 'In Transit',
+    shipment_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id)
+);
+
+-Audit_trail: 
+CREATE TABLE audit_trail (
+    audit_id INT AUTO_INCREMENT PRIMARY KEY,
+    table_name VARCHAR(255) NOT NULL,
+    action_type ENUM('INSERT', 'UPDATE', 'DELETE') NOT NULL,
+    record_id INT NOT NULL,
+    changed_data TEXT, -- JSON representation of changed fields
+    changed_by VARCHAR(255), -- User or system making the change
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-Notifications table: 
+CREATE TABLE notifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL, -- Recipient user ID
+    notification_type ENUM('Inventory', 'Order', 'Shipment') NOT NULL, -- Event type
+    event_id INT NOT NULL, -- ID of the associated event (product_id, order_id, or shipment_id)
+    message TEXT NOT NULL, -- Notification message
+    is_read BOOLEAN DEFAULT FALSE, -- Status of the notification
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Time the notification was created
+);
