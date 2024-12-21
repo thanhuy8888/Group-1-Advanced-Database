@@ -1,0 +1,79 @@
+<?php
+function analytics($con)
+{
+    try {
+        // Lấy số lượng người dùng
+        $stmtUsers = $con->prepare("SELECT COUNT(*) AS TotalUsers FROM Users");
+        $stmtUsers->execute();
+        $totalUsers = $stmtUsers->fetch()['TotalUsers'];
+
+        // Lấy số lượng vai trò
+        $stmtRoles = $con->prepare("SELECT r.RoleName, COUNT(u.UserID) AS RoleCount 
+                                    FROM Roles r 
+                                    LEFT JOIN Users u ON r.RoleID = u.RoleID 
+                                    GROUP BY r.RoleName");
+        $stmtRoles->execute();
+        $rolesData = $stmtRoles->fetchAll();
+
+        // Lấy số lượng người dùng đăng ký theo ngày
+        $stmtDaily = $con->prepare("SELECT CreatedAtDate, COUNT(UserID) AS DailyCount 
+                                     FROM Users 
+                                     GROUP BY CreatedAtDate 
+                                     ORDER BY CreatedAtDate DESC 
+                                     LIMIT 7");
+        $stmtDaily->execute();
+        $dailyData = $stmtDaily->fetchAll();
+
+        // Hiển thị dữ liệu analytics
+        echo '<div class="card">';
+        echo '    <div class="card-header">User Analytics</div>';
+        echo '    <div class="card-body">';
+
+        // Tổng số người dùng
+        echo '        <h5>Total Users: ' . htmlspecialchars($totalUsers) . '</h5>';
+
+        // Số lượng người dùng theo vai trò
+        echo '        <h5>User Count by Role:</h5>';
+        echo '        <ul>';
+        foreach ($rolesData as $role) {
+            echo '            <li>' . htmlspecialchars($role['RoleName']) . ': ' . htmlspecialchars($role['RoleCount']) . '</li>';
+        }
+        echo '        </ul>';
+
+        // Số lượng người dùng đăng ký theo ngày
+        echo '        <h5>Daily Registrations (Last 7 Days):</h5>';
+        echo '        <table class="table table-bordered">';
+        echo '            <thead>';
+        echo '                <tr>';
+        echo '                    <th>Date</th>';
+        echo '                    <th>Registrations</th>';
+        echo '                </tr>';
+        echo '            </thead>';
+        echo '            <tbody>';
+        foreach ($dailyData as $daily) {
+            echo '                <tr>';
+            echo '                    <td>' . htmlspecialchars($daily['CreatedAtDate']) . '</td>';
+            echo '                    <td>' . htmlspecialchars($daily['DailyCount']) . '</td>';
+            echo '                </tr>';
+        }
+        echo '            </tbody>';
+        echo '        </table>';
+
+        echo '    </div>';
+        echo '</div>';
+
+    } catch (Exception $e) {
+        // Hiển thị lỗi nếu xảy ra
+        echo '<div class="alert alert-danger">Error: ' . htmlspecialchars($e->getMessage()) . '</div>';
+    }
+}
+
+// Sử dụng function này trong trang PHP của bạn
+if (isset($_SESSION['username']) && isset($_SESSION['password'])) {
+    include 'connect.php';
+    analytics($con);
+} else {
+    header('Location: index.php');
+    exit();
+}
+?>
