@@ -439,7 +439,7 @@ CREATE TABLE ERPIntegrations (
     ERPSystemID INT,
     IntegrationDate DATE NOT NULL,
     Status VARCHAR(50) NOT NULL,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE SET NULL
     FOREIGN KEY (ERPSystemID) REFERENCES ERPSystems(ERPSystemID)
 );
 LOAD DATA INFILE 'E:\\Data\\Integration with ERP\\ERPIntegrations.csv'
